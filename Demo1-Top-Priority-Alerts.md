@@ -218,6 +218,6 @@ Perfect! I've created a comprehensive static dashboard with embedded data from t
 - Color-coded priority badges
 - Flapping alerts highlighted in red
 
-View your dashboard
+[View your dashboard](https://boristyshkevich.github.io/AI-Powered-Alert-Analysis/alert-org-breakdown-dashboard.html)
 
 The dashboard is ready to open in the right frame! All data is embedded, so it works completely offline. The chart types were selected to best visualize the different aspects of your alert data - comparisons, distributions, and multi-dimensional patterns.

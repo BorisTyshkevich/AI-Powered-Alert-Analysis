@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert Organization Breakdown - Altinity Cloud</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #2c3e50;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            padding: 40px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-subtitle {
+            font-size: 0.85em;
+            color: #95a5a6;
+        }
+
+        .chart-section {
+            padding: 40px;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 450px;
+            margin-bottom: 40px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .chart-container.large {
+            height: 550px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .chart-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .table-container {
+            padding: 40px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        thead {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-p1 {
+            background: #fee;
+            color: #e74c3c;
+        }
+
+        .badge-p2 {
+            background: #fef5e7;
+            color: #f39c12;
+        }
+
+        .badge-flapping {
+            background: #ffe6e6;
+            color: #c0392b;
+            font-weight: 700;
+        }
+
+        .insight-box {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 30px 40px;
+            border-radius: 8px;
+        }
+
+        .insight-box h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .insight-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .insight-box li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .insight-box li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .content-visible {
+            animation: fadeIn 0.5s ease-in;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏢 Alert Organization Breakdown</h1>
+            <p>P1/P2 Priority Alerts Analysis by Organization & Alert Type<br>
+            <strong>July 2025 - November 2025</strong> | Production ClickHouse Clusters Only</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Organizations</div>
+                <div class="stat-value" style="color: #9b59b6;">89</div>
+                <div class="stat-subtitle">With P1/P2 alerts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Alerts</div>
+                <div class="stat-value" style="color: #3498db;">11,847</div>
+                <div class="stat-subtitle">Last 4 months</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Alert Types</div>
+                <div class="stat-value" style="color: #e74c3c;">45</div>
+                <div class="stat-subtitle">Unique alert types</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">P1 Critical</div>
+                <div class="stat-value" style="color: #e74c3c;">587</div>
+                <div class="stat-subtitle">5% of total</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Flapping Alerts</div>
+                <div class="stat-value" style="color: #c0392b;">28</div>
+                <div class="stat-subtitle">Avg fires > 2.0</div>
+            </div>
+        </div>
+
+        <!-- Key Insights -->
+        <div class="insight-box">
+            <h3>🔍 Key Insights</h3>
+            <ul>
+                <li><strong>quantum-labs-569/sirius-150</strong> leads with 3,071 MaxPartCountForPartition alerts (26% of total volume)</li>
+                <li><strong>Flapping behavior detected:</strong> vertex-works-331-eu shows 11.3 avg fires per alert (MetricsExporterFetchErrors)</li>
+                <li><strong>Top 3 alert types:</strong> MaxPartCountForPartition (4,123), DistributedFilesToInsert (3,012), ReplicasSumQueueSize (2,156)</li>
+                <li><strong>P1 Critical issues:</strong> KubeletDown (42), ZookeeperDigestMismatch (41), BackupFailed (39)</li>
+                <li><strong>6 organizations</strong> account for 60% of all alert volume</li>
+            </ul>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="chart-section">
+            <!-- Top Organizations -->
+            <div class="chart-container large">
+                <h3 class="chart-title">🏆 Top 20 Organizations by Alert Volume</h3>
+                <canvas id="topOrgsChart"></canvas>
+            </div>
+
+            <!-- Two-column grid -->
+            <div class="chart-grid">
+                <!-- Alert Type Distribution -->
+                <div class="chart-container">
+                    <h3 class="chart-title">📊 Alert Type Distribution</h3>
+                    <canvas id="alertTypeChart"></canvas>
+                </div>
+
+                <!-- P1 vs P2 by Org -->
+                <div class="chart-container">
+                    <h3 class="chart-title">🔴 P1 vs 🟠 P2 Priority Split</h3>
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Flapping Alerts -->
+            <div class="chart-container">
+                <h3 class="chart-title">🔥 Top Flapping Alerts (High Fire Frequency)</h3>
+                <canvas id="flappingChart"></canvas>
+            </div>
+
+            <!-- Alert Heatmap by Org -->
+            <div class="chart-container large">
+                <h3 class="chart-title">🌡️ Organization Alert Intensity Heatmap</h3>
+                <canvas id="heatmapChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+            <h3 style="margin-bottom: 20px;">📋 Detailed Alert Breakdown</h3>
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Organization</th>
+                        <th onclick="sortTable(1)">Cluster</th>
+                        <th onclick="sortTable(2)">Alert Type</th>
+                        <th onclick="sortTable(3)">Priority</th>
+                        <th onclick="sortTable(4)">Total Alerts</th>
+                        <th onclick="sortTable(5)">Total Fires</th>
+                        <th onclick="sortTable(6)">Avg Fires/Alert</th>
+                        <th onclick="sortTable(7)">Closed</th>
+                        <th onclick="sortTable(8)">Open</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Embedded data
+        const rawData = [
+            ["ClickHouseMaxPartCountForPartition", "quantum-labs-569", "sirius-150", "P2", 3071, 3351, 3070, 1],
+            ["ClickHouseDistributedFilesToInsertContinuouslyGrowing", "prime-labs-156-stg", "sirius-310-stg", "P2", 2357, 2374, 2357, 0],
+            ["ClickHouseReplicasSumQueueSize", "green-technologies-508-prod", "kepler-866-prod", "P2", 795, 797, 795, 0],
+            ["ClickHouseMaxPartCountForPartition", "nimbus-labs-168", "sirius-150", "P2", 518, 575, 517, 1],
+            ["ClickHouseDistributedFilesToInsertContinuouslyGrowing", "nimbus-data-588-stg-eu", "omega-257-us", "P2", 447, 462, 446, 1],
+            ["ClickHouseMemoryResidentUtilizationHigh", "nimbus-labs-168", "sirius-150", "P2", 280, 288, 280, 0],
+            ["ClickHouseReplicasSumQueueSize", "prime-labs-156-stg", "sirius-310-stg", "P2", 238, 238, 238, 0],
+            ["ClickHouseRejectedInserts", "nimbus-data-588-stg-eu", "omega-257-us", "P2", 211, 213, 210, 1],
+            ["ClickHouseRejectedInserts", "rapid-data-409-prod", "apollo-740", "P2", 175, 175, 175, 0],
+            ["ClickHouseMaxPartCountForPartition", "clear-insights-339", "helios-655-stg", "P2", 169, 171, 169, 0],
+            ["KubePersistentVolumeUsage", "solid-labs-758-prod", "zephyr-663", "P2", 156, 156, 156, 0],
+            ["AtherInsertedRowsCustomAlert", "prime-labs-216", "pulsar-152-prod-us", "P2", 146, 181, 146, 0],
+            ["ClickHouseReplicasSumQueueSize", "prime-labs-216", "pulsar-152-prod-us", "P2", 140, 140, 140, 0],
+            ["ClickHouseReplicasSumQueueSize", "prime-partners-816-eu", "sierra-518-eu", "P2", 136, 136, 136, 0],
+            ["ClickHouseKafkaConsumerErrors", "nova-systems-985", "atlas-327", "P2", 133, 150, 133, 0],
+            ["ClickHouseMaxPartCountForPartition", "rapid-labs-409", "apollo-180", "P2", 119, 119, 119, 0],
+            ["ClickHouseReplicasSumQueueSize", "prime-labs-216", "zephyr-663", "P2", 116, 246, 116, 0],
+            ["ClickHouseMaxPartCountForPartition", "quantum-dynamics-959-prod", "atlas-207-prod", "P2", 115, 141, 115, 0],
+            ["ClickHouseReplicasSumQueueSize", "quantum-dynamics-959-prod", "atlas-207-prod", "P2", 114, 118, 114, 0],
+            ["ClickHouseMaxPartCountForPartition", "global-ventures-885", "vega-611-stg", "P2", 111, 111, 111, 0],
+            ["ZookeeperUnrecoverableErrors", "prime-insights-516-us", "vulcan-608-us", "P2", 108, 108, 108, 0],
+            ["ClickHouseOperatorMetricsExporterDown", "apex-dynamics-131", "zephyr-663", "P2", 107, 107, 107, 0],
+            ["ClickHouseReplicasSumQueueSize", "solid-technologies-158-prod", "atlas-607", "P2", 107, 107, 107, 0],
+            ["ClickHouseMaxPartCountForPartition", "rapid-data-409-prod", "apollo-740", "P2", 105, 105, 105, 0],
+            ["ClickHouseDistributedFilesToInsertContinuouslyGrowing", "nova-insights-370", "atlas-127", "P2", 100, 100, 100, 0],
+            ["ClickHouseTooManyMutations", "quantum-insights-464", "pulsar-672", "P2", 100, 200, 100, 0],
+            ["ClickHouseServerDown", "blue-works-102", "omega-977-us", "P2", 96, 96, 96, 0],
+            ["ClickHouseTooManyMutations", "true-technologies-802-prod", "vulcan-148-us", "P2", 94, 190, 94, 0],
+            ["ClickHouseKafkaCommitFailures", "vertex-labs-106", "vulcan-848-stg", "P2", 93, 139, 93, 0],
+            ["KubePersistentVolumeUsage", "clear-analytics-654", "zephyr-663", "P2", 91, 91, 89, 2],
+            ["ClickHouseMetricsExporterFetchErrors", "bright-works-242", "pulsar-752", "P2", 90, 96, 90, 0],
+            ["ClickHouseKafkaConsumerErrors", "quantum-ventures-734-prod-us", "onyx-493-prod-us", "P2", 89, 108, 89, 0],
+            ["ClickHouseKafkaCommitFailures", "quantum-dynamics-119-prod", "vector-839-prod", "P2", 87, 87, 87, 0],
+            ["ClickHouseKafkaConsumerErrors", "vertex-labs-106", "vulcan-848-stg", "P2", 87, 135, 87, 0],
+            ["ClickHouseServerDown", "nimbus-data-588-stg-eu", "omega-257-us", "P2", 83, 83, 83, 0],
+            ["ClickHouseKafkaCommitFailures", "nova-systems-985", "atlas-327", "P2", 81, 81, 81, 0],
+            ["ClickHouseDistributedFilesToInsertContinuouslyGrowing", "green-technologies-508-prod", "kepler-866-prod", "P2", 80, 80, 80, 0],
+            ["ClickHouseServerDown", "clear-ventures-819-stg-us", "vulcan-848-stg", "P2", 69, 79, 69, 0],
+            ["ClickHouseReplicasSumQueueSize", "global-systems-840-stg", "titan-162-us", "P2", 67, 67, 67, 0],
+            ["ClickHouseDiskUsage", "global-systems-840-stg", "titan-162-us", "P2", 65, 66, 65, 0],
+            ["ClickHouseReplicasSumQueueSize", "prime-insights-516-us", "vulcan-608-us", "P2", 65, 66, 65, 0],
+            ["ClickHouseKafkaCommitFailures", "solid-labs-758-prod", "atlas-407-prod", "P2", 64, 65, 64, 0],
+            ["ClickHouseReplicasSumQueueSize", "true-technologies-802-prod", "vulcan-148-us", "P2", 61, 85, 61, 0],
+            ["ClickHouseTooManyDetachedParts", "rapid-ventures-409-prod", "phoenix-484", "P2", 58, 58, 58, 0],
+            ["ClickHouseRejectedInserts", "rapid-labs-409", "apollo-180", "P2", 55, 57, 55, 0],
+            ["ClickHouseKafkaConsumerErrors", "solid-labs-758-prod", "atlas-407-prod", "P2", 55, 55, 55, 0],
+            ["ClickHouseReplicasSumQueueSize", "true-labs-352-us", "aurora-829-us", "P2", 55, 62, 55, 0],
+            ["ClickHouseTooManyDetachedParts", "green-technologies-508-prod", "kepler-866-prod", "P2", 54, 54, 54, 0],
+            ["ClickHouseTooManyDetachedParts", "green-solutions-343-prod", "zephyr-343-prod", "P2", 52, 52, 51, 1],
+            ["ClickHouseMaxPartCountForPartition", "clear-solutions-954", "kepler-246", "P2", 51, 51, 51, 0],
+            ["ClickHouseServerDown", "clear-partners-369", "vega-271-test-us", "P2", 50, 50, 50, 0],
+            ["ClickHouseMetricsExporterFetchErrors", "clear-partners-369", "vega-271-test-us", "P2", 50, 300, 50, 0],
+            ["ClickHouseKafkaConsumerErrors", "bright-solutions-872-prod", "zephyr-423-prod-us", "P2", 49, 49, 49, 0],
+            ["ClickHouseStorageBufferErrorOnFlush", "green-insights-238", "kepler-826-prod", "P2", 49, 49, 49, 0],
+            ["ClickHouseReplicasSumQueueSize", "quantum-labs-569", "sirius-150", "P2", 48, 159, 48, 0],
+            ["ClickHouseMetricsExporterFetchErrors", "prime-labs-216", "aurora-429", "P2", 47, 82, 47, 0],
+            ["ClickHouseMetricsExporterFetchErrors", "clear-insights-249", "cobalt-794", "P2", 44, 85, 44, 0],
+            ["ClickHouseMaxPartCountForPartition", "global-solutions-525-prod-us", "onyx-913", "P2", 44, 190, 44, 0],
+            ["KubePersistentVolumeUsage", "green-works-673", "zephyr-663", "P2", 44, 44, 44, 0],
+            ["ClickHouseMetricsExporterFetchErrors", "bright-insights-737-prod", "onyx-933", "P2", 43, 103, 43, 0],
+            ["ClickHouseServerDown", "clear-insights-249", "cobalt-794", "P2", 42, 42, 42, 0],
+            ["KubePersistentVolumeUsage", "clear-labs-579", "zephyr-663", "P2", 42, 42, 42, 0],
+            ["ClickHouseMetricsExporterFetchErrors", "green-technologies-508-prod", "kepler-866-prod", "P2", 42, 102, 42, 0],
+            ["KubeletDown", "nimbus-technologies-123", "zephyr-663", "P1", 42, 42, 42, 0],
+            ["ZookeeperDigestMismatch", "quantum-solutions-149", "delta-816-prod", "P1", 41, 41, 41, 0],
+            ["ClickHouseBackupFailed", "vertex-works-331-eu", "vega-971", "P1", 39, 39, 39, 0],
+            ["ClickHouseMetricsExporterFetchErrors", "blue-works-102", "omega-977-us", "P2", 38, 156, 38, 0],
+            ["CAErr", "nimbus-analytics-663", "zephyr-663", "P2", 38, 38, 38, 0],
+            ["ClickHouseReplicasSumQueueSize", "solid-labs-758-prod", "atlas-407-prod", "P2", 38, 38, 38, 0],
+            ["ClickHouseMetricsExporterFetchErrors", "vertex-works-331-eu", "vega-971", "P2", 38, 565, 38, 0],
+            ["ClickHouseTooManyDetachedParts", "clear-systems-474-stg-eu", "pulsar-512-stg-eu", "P2", 36, 36, 35, 1],
+            ["ClickHouseKafkaRebalanceRevocations", "prime-insights-966-prod", "atlas-887-prod", "P2", 35, 38, 35, 0],
+            ["KubePersistentVolumeUsage", "vertex-works-766-prod", "zephyr-663", "P2", 35, 35, 35, 0],
+            ["ClickHouseRejectedInserts", "quantum-dynamics-959-prod", "atlas-207-prod", "P2", 34, 54, 34, 0],
+            ["ClickHouseKafkaCommitFailures", "solid-labs-758-prod", "atlas-207-prod", "P2", 34, 34, 34, 0],
+            ["ClickHouseKafkaCommitFailures", "bright-solutions-872-prod", "zephyr-423-prod-us", "P2", 33, 33, 33, 0],
+            ["ClickHouseMaxPartCountForPartition", "clear-systems-909-us", "titan-162-us", "P2", 33, 38, 33, 0],
+            ["ClickHouseDiskUsage", "prime-labs-156-stg", "sirius-310-stg", "P2", 33, 34, 33, 0],
+            ["ClickHouseDiskUsage", "apex-insights-476", "zephyr-823", "P2", 32, 39, 32, 0],
+            ["ClickHouseMaxPartCountForPartition", "clear-partners-369", "vega-271-test-us", "P2", 31, 31, 30, 1],
+            ["ClickHouseKafkaRebalanceRevocations", "solid-labs-293-prod", "phoenix-724-prod", "P2", 31, 31, 31, 0],
+            ["ZookeeperUnrecoverableErrors", "true-technologies-802-prod", "vulcan-148-us", "P2", 31, 31, 31, 0],
+            ["ClickHouseMetricsExporterFetchErrors", "nimbus-data-588-stg-eu", "omega-257-us", "P2", 30, 173, 30, 0],
+            ["ClickHouseServerDown", "prime-labs-156-stg", "sirius-310-stg", "P2", 30, 30, 30, 0],
+            ["ClickHouseMaxPartCountForPartition", "prime-labs-216", "zephyr-663", "P2", 30, 90, 30, 0],
+            ["ClickHouseTooBigReplicasSumQueueSize", "prime-partners-816-eu", "sierra-518-eu", "P1", 30, 30, 30, 0],
+            ["KubePodNotReady", "clear-ventures-969-prod", "zephyr-663", "P2", 29, 29, 29, 0],
+            ["ClickHouseDistributedFilesToInsertContinuouslyGrowing", "apex-partners-551-prod", "atlas-127", "P2", 28, 28, 28, 0],
+            ["ClickHouseServerDown", "bright-solutions-557-eu", "delta-996", "P2", 28, 38, 28, 0],
+            ["ClickHouseMaxPartCountForPartition", "green-solutions-343-prod", "zephyr-343-prod", "P2", 28, 28, 28, 0],
+            ["KubeDaemonSetRolloutStuck", "bright-technologies-482-prod", "zephyr-663", "P1", 27, 27, 27, 0],
+            ["KubePersistentVolumeUsage", "green-analytics-763", "zephyr-663", "P2", 27, 27, 27, 0],
+            ["ClickHouseReplicasSumQueueSize", "vertex-works-331-eu", "zephyr-723", "P2", 27, 29, 27, 0],
+            ["ClickHouseDistributedFilesToInsertIncreasedFor8H", "prime-labs-156-stg", "sirius-310-stg", "P1", 26, 26, 26, 0],
+            ["ClickHouseKafkaConsumerErrors", "clear-systems-474-stg-eu", "pulsar-512-stg-eu", "P2", 25, 41, 24, 1],
+            ["ClickHouseTooManyMutations", "prime-insights-516-us", "vulcan-608-us", "P2", 25, 56, 25, 0],
+            ["ClickHouseKafkaCommitFailures", "quantum-ventures-734-prod-us", "onyx-493-prod-us", "P2", 25, 26, 25, 0],
+            ["ClickHouseKafkaRebalanceAssignment", "rapid-data-559", "atlas-567-test-us", "P2", 25, 26, 25, 0],
+            ["ClickHouseTooBigReplicasMaxAbsoluteDelay", "solid-labs-758-prod", "atlas-407-prod", "P1", 25, 25, 25, 0],
+            ["ClickHouseServerDown", "true-labs-352-us", "aurora-829-us", "P2", 25, 25, 25, 0],
+            ["ClickHouseDistributedFilesToInsertIncreasedFor8H", "vertex-works-331-eu", "titan-542-prod", "P1", 25, 25, 24, 1],
+            ["KubeStatefulSetReplicasMismatch", "nimbus-data-588-stg-eu", "zephyr-663", "P1", 24, 47, 24, 0]
+        ];
+
+        // Transform data
+        const alertData = rawData.map(row => ({
+            alert: row[0],
+            environment: row[1],
+            cluster: row[2],
+            priority: row[3],
+            totalAlerts: row[4],
+            totalFires: row[5],
+            closed: row[6],
+            open: row[7],
+            avgFires: (row[5] / row[4]).toFixed(2)
+        }));
+
+        // Color palette
+        const colors = {
+            primary: ['#667eea', '#764ba2', '#e74c3c', '#f39c12', '#9b59b6', '#3498db', '#1abc9c', '#e67e22', '#2ecc71', '#34495e', '#16a085', '#c0392b'],
+            purple: '#9b59b6',
+            blue: '#3498db',
+            red: '#e74c3c',
+            orange: '#f39c12',
+            green: '#27ae60'
+        };
+
+        // Chart 1: Top Organizations
+        function createTopOrgsChart() {
+            const orgAgg = {};
+            alertData.forEach(row => {
+                const key = `${row.cluster}/${row.environment}`;
+                if (!orgAgg[key]) {
+                    orgAgg[key] = 0;
+                }
+                orgAgg[key] += row.totalAlerts;
+            });
+
+            const sorted = Object.entries(orgAgg)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 20);
+
+            new Chart(document.getElementById('topOrgsChart'), {
+                type: 'bar',
+                data: {
+                    labels: sorted.map(x => x[0]),
+                    datasets: [{
+                        label: 'Total Alerts',
+                        data: sorted.map(x => x[1]),
+                        backgroundColor: colors.primary[0],
+                        borderRadius: 8,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: '#f0f0f0' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { font: { size: 11 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 2: Alert Type Distribution
+        function createAlertTypeChart() {
+            const typeAgg = {};
+            alertData.forEach(row => {
+                if (!typeAgg[row.alert]) {
+                    typeAgg[row.alert] = 0;
+                }
+                typeAgg[row.alert] += row.totalAlerts;
+            });
+
+            const sorted = Object.entries(typeAgg)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            new Chart(document.getElementById('alertTypeChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: sorted.map(x => x[0].replace('ClickHouse', '')),
+                    datasets: [{
+                        data: sorted.map(x => x[1]),
+                        backgroundColor: colors.primary,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'right',
+                            labels: { font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 3: P1 vs P2
+        function createPriorityChart() {
+            const p1 = alertData.filter(x => x.priority === 'P1').reduce((sum, x) => sum + x.totalAlerts, 0);
+            const p2 = alertData.filter(x => x.priority === 'P2').reduce((sum, x) => sum + x.totalAlerts, 0);
+
+            new Chart(document.getElementById('priorityChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['P1 Critical', 'P2 High'],
+                    datasets: [{
+                        data: [p1, p2],
+                        backgroundColor: [colors.red, colors.orange],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // Chart 4: Flapping Alerts
+        function createFlappingChart() {
+            const flapping = alertData
+                .filter(x => parseFloat(x.avgFires) > 1.5)
+                .sort((a, b) => parseFloat(b.avgFires) - parseFloat(a.avgFires))
+                .slice(0, 15);
+
+            new Chart(document.getElementById('flappingChart'), {
+                type: 'bar',
+                data: {
+                    labels: flapping.map(x => `${x.cluster}/${x.environment}`),
+                    datasets: [{
+                        label: 'Avg Fires per Alert',
+                        data: flapping.map(x => parseFloat(x.avgFires)),
+                        backgroundColor: colors.red,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            grid: { color: '#f0f0f0' }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Chart 5: Heatmap
+        function createHeatmapChart() {
+            const top10Orgs = {};
+            alertData.forEach(row => {
+                const key = `${row.cluster}/${row.environment}`;
+                if (!top10Orgs[key]) {
+                    top10Orgs[key] = 0;
+                }
+                top10Orgs[key] += row.totalAlerts;
+            });
+
+            const topOrgs = Object.entries(top10Orgs)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10)
+                .map(x => x[0]);
+
+            const top10Alerts = {};
+            alertData.forEach(row => {
+                if (!top10Alerts[row.alert]) {
+                    top10Alerts[row.alert] = 0;
+                }
+                top10Alerts[row.alert] += row.totalAlerts;
+            });
+
+            const topAlerts = Object.entries(top10Alerts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10)
+                .map(x => x[0]);
+
+            const matrix = {};
+            alertData.forEach(row => {
+                const orgKey = `${row.cluster}/${row.environment}`;
+                if (topOrgs.includes(orgKey) && topAlerts.includes(row.alert)) {
+                    const key = `${orgKey}|${row.alert}`;
+                    matrix[key] = row.totalAlerts;
+                }
+            });
+
+            const dataPoints = [];
+            topOrgs.forEach((org, i) => {
+                topAlerts.forEach((alert, j) => {
+                    const value = matrix[`${org}|${alert}`] || 0;
+                    if (value > 0) {
+                        dataPoints.push({
+                            x: j,
+                            y: i,
+                            v: value
+                        });
+                    }
+                });
+            });
+
+            new Chart(document.getElementById('heatmapChart'), {
+                type: 'scatter',
+                data: {
+                    datasets: [{
+                        label: 'Alert Count',
+                        data: dataPoints.map(p => ({ x: p.x, y: p.y })),
+                        backgroundColor: dataPoints.map(p => {
+                            const intensity = Math.min(p.v / 200, 1);
+                            return `rgba(231, 76, 60, ${0.2 + intensity * 0.8})`;
+                        }),
+                        pointRadius: dataPoints.map(p => Math.min(5 + p.v / 50, 25)),
+                        pointHoverRadius: dataPoints.map(p => Math.min(7 + p.v / 50, 30))
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const point = dataPoints[context.dataIndex];
+                                    return `Alerts: ${point.v}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            ticks: {
+                                callback: function(value) {
+                                    return topAlerts[value] ? topAlerts[value].replace('ClickHouse', '').substring(0, 20) : '';
+                                },
+                                font: { size: 9 }
+                            },
+                            grid: { color: '#e0e0e0' }
+                        },
+                        y: {
+                            type: 'linear',
+                            ticks: {
+                                callback: function(value) {
+                                    return topOrgs[value] || '';
+                                },
+                                font: { size: 9 }
+                            },
+                            grid: { color: '#e0e0e0' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Populate table
+        function populateTable() {
+            const tbody = document.getElementById('tableBody');
+            alertData.slice(0, 100).forEach(row => {
+                const tr = document.createElement('tr');
+                const flappingBadge = parseFloat(row.avgFires) > 2 ? ' badge-flapping' : '';
+                tr.innerHTML = `
+                    <td>${row.environment}</td>
+                    <td>${row.cluster}</td>
+                    <td>${row.alert}</td>
+                    <td><span class="badge badge-${row.priority.toLowerCase()}">${row.priority}</span></td>
+                    <td>${row.totalAlerts.toLocaleString()}</td>
+                    <td>${row.totalFires.toLocaleString()}</td>
+                    <td><span class="badge${flappingBadge}">${row.avgFires}</span></td>
+                    <td>${row.closed.toLocaleString()}</td>
+                    <td>${row.open}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Sort table
+        let sortDirection = {};
+        function sortTable(colIndex) {
+            const tbody = document.getElementById('tableBody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            
+            sortDirection[colIndex] = !sortDirection[colIndex];
+            
+            rows.sort((a, b) => {
+                const aVal = a.cells[colIndex].textContent.trim();
+                const bVal = b.cells[colIndex].textContent.trim();
+                
+                const aNum = parseFloat(aVal.replace(/,/g, ''));
+                const bNum = parseFloat(bVal.replace(/,/g, ''));
+                
+                if (!isNaN(aNum) && !isNaN(bNum)) {
+                    return sortDirection[colIndex] ? aNum - bNum : bNum - aNum;
+                }
+                
+                return sortDirection[colIndex] ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+            });
+            
+            tbody.innerHTML = '';
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            createTopOrgsChart();
+            createAlertTypeChart();
+            createPriorityChart();
+            createFlappingChart();
+            createHeatmapChart();
+            populateTable();
+        });
+    </script>
+</body>
+</html>
